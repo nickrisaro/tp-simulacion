@@ -4,12 +4,16 @@ import sys
 
 class GCL:
 
-    def __init__(self, a = 1013904223, c = 1664525, m = np.power(2, 32), x0 = 1013904223):
-        self.a = a
-        self.c = c
-        self.m = m
-        self.x0 = x0
-        self.xActual = x0
+    def __init__(self, unitario = False):
+        padrones = np.array([84623, 95042, 95099, 95512])
+        self.a = 1013904223
+        self.c = 1664525
+        self.m = np.power(2, 32)
+        self.x0 = int(np.average(padrones))
+        self.xActual = self.x0
+        if unitario:
+            self.m = 1
+            self.c = 0.1664525
 
     def generar(self):
         self.xActual = (self.a*self.xActual + self.c) % self.m
@@ -17,16 +21,16 @@ class GCL:
 
 def main():
     print("TP 1 - Ejercicio 1")
-    padrones = np.array([84623, 95042, 95099, 95512])
-    promedioPadrones = np.average(padrones)
 
-    generador = GCL(x0 = int(promedioPadrones))
-    print("a) un Generador Congruencial Lineal de módulo 2^32, multiplicador 1013904223, incremento de 1664525 y semilla {0}".format(int(promedioPadrones)))
+    generador = GCL()
+    print("a) Implementar un Generador Congruencial Lineal de módulo {0}, multiplicador {1}, incremento de {2} y semilla {3}"
+            .format(generador.m, generador.a, generador.c, generador.x0))
     for i in range(0, 10):
         print("{0} - {1}".format(i, generador.generar()))
 
-    generador = GCL(x0 = promedioPadrones, c = 0.1664525, m = 1)
-    print("b) para que devuelva números entre 0 y 1 utilizo módulo 1, multiplicador 1013904223, incremento de 0.1664525 y semilla {0}".format(promedioPadrones))
+    generador = GCL(unitario = True)
+    print("b) para que devuelva números entre 0 y 1 utilizo módulo {0}, multiplicador {1}, incremento de {2} y semilla {3}"
+            .format(generador.m, generador.a, generador.c, generador.x0))
     print("c) Genero 100000 valores con los parámetros de b y los grafico en un histograma")
     x = np.array([])
     for i in range(0, 100000):
