@@ -15,7 +15,7 @@ class GCL:
         self.xActual = (self.a*self.xActual + self.c) % self.m
         return self.xActual
 
-if __name__ == "__main__":
+def main():
     print("TP 1 - Ejercicio 1")
     padrones = np.array([84623, 95042, 95099, 95512])
     promedioPadrones = np.average(padrones)
@@ -35,3 +35,6 @@ if __name__ == "__main__":
     plot.hist(x)
     plot.savefig(sys.path[0] + "/E01-histograma.png")
     print("El histograma se guardó en {0}/E01-histograma.png".format(sys.path[0]))
+
+if __name__ == "__main__":
+    main()
