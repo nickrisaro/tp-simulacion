@@ -25,7 +25,7 @@ def gap_chi2 (frecuencias):
 		#print("PARA EL VALOR ", valor, " OBSERVE ", f_observada, " ESPERABA OBSERVAR ", f_esperada, " EN CANT DE SIMULACIONES ", CANT_GAPS)
 		D2i = np.power(f_observada - f_esperada,2) / f_esperada
 		D2 += D2i
-	limiteSuperior = chi2.ppf(1 - SIGNIFICANCIA_CHI2, df=5)
+	limiteSuperior = chi2.ppf(1 - SIGNIFICANCIA_CHI2, df=len(frecuencias) - 1)
 	print("Estadistico: {:.2f} ".format(D2))
 	if D2 <= limiteSuperior:
 		print("El test acepta la hipotesis nula. Se comporta como una Geometrica.")
