@@ -54,8 +54,6 @@ def main():
     plot.subplot(121)
     plot.hist(random_array_no_estandar, bins=100)
     plot.title('Histograma')
-    #plot.savefig(sys.path[0] + "/E04-histograma.png")
-    #print("El histograma se guardó en {0}/E04-histograma.png".format(sys.path[0]))
 
     plot.subplot(122)
     x = np.linspace(stats.norm.ppf(0.01, 25, 2), stats.norm.ppf(0.99, 25, 2), 100)
@@ -68,8 +66,8 @@ def main():
 
     media_obtenida = np.mean(random_array_no_estandar)
     desvio_obtenido = np.std(random_array_no_estandar)
-    print("Media obtenida: ", media_obtenida)
-    print("Desvio obtenido: ", desvio_obtenido)
+    print("Media obtenida: ", media_obtenida, "; Media teorica: ", 25)
+    print("Desvio obtenido: ", desvio_obtenido, "; Desvio teorico: ", 2)
 
 
 if __name__ == "__main__":
