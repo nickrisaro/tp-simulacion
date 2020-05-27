@@ -27,3 +27,8 @@ Si el sistema lanza un error
 Se debe remover de requirements.txt el paquete `pkg-resources==0.0.0`
 
 y volver a correr el comando `pip install -r requirements.txt`
+
+
+Para ver corridas graficas
+
+`sudo apt-get install python3-tk`
