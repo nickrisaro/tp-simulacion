@@ -55,6 +55,7 @@ def main():
     print("a) Graficar la función de densidad de probabilidad")
     x,y = construirFuncionDensidad()
 
+    plot.title('Funcion densidad')
     plot.plot(x, y)
     plot.savefig(sys.path[0] + f"/E03-funcion-densidad.png")
 
