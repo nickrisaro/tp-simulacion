@@ -1,75 +1,96 @@
 import Ejercicio01 as generador
 import numpy as np
 import mpmath as mp
+import numpy.ma as M  
+from scipy import interpolate
 import matplotlib.pyplot as plot
+from scipy.interpolate import interp1d
 import sys
 
-def plotFunction(x, y, tipo, lbl, legend, labelColor):
-    # Umbral para aplicar la máscara
-    threshold = 1
 
-    # Aplico una máscara
-    y_values = np.ma.array(y)
-    y_masked_values = np.ma.masked_where(y_values < threshold , y_values)
 
-    plot.plot(x, y_masked_values, '-r', label='f1(x)')
-    plot.title(f'Gráfico de la función {tipo}')
-    plot.xlabel('x', color=labelColor)
-    plot.ylabel('y', color=labelColor)
-    plot.legend(loc=legend)
-    plot.grid()
-    plot.savefig(sys.path[0] + f"/E03-funcion-{tipo}.png")
-    print(f"La función {tipo} se guardó en {sys.path[0]}/E03-funcion-{tipo}.png")
+def obtenerValorAcumulada(x):
+    if (x <= -np.pi/2 ):
+        return 0
+    if (x > np.pi/2):
+        return 1
+    a = (13 * x)/ (12 * (np.pi))
+    b = (x ** 3) / (3 * (np.pi ** 3))
+
+    y = 1/2 + a - b
+
+    return  y
+
+def obtenerValorDensidad(x):
+    if(np.isclose(x,-np.pi/2,atol=0.01,rtol=0.01) or np.isclose(x,np.pi/2,atol=0.01,rtol=0.01)):
+        return np.nan
+    if(x < -np.pi/2 or x > np.pi/2):
+        return 0
+    else:
+        return (13/12*np.pi)-1/np.power(np.pi,3)*x*x
 
 def construirFuncionDensidad():
-    x = []
-    y = []    	
+    x = np.arange(-5, 5, 0.01)
+    y = np.array([])
 
-    for i in np.arange(-10, 10, 0.01):
-        x.append(i)
-        if (i>= -mp.pi/2 and i<= mp.pi/2):
-            a = 13.0/(12.0 * mp.pi)
-            b = ((i ** 2)/(mp.pi ** 3))
-            y.append(a - b)
-        else:
-            y.append(0)
+    for i in x:
+        y = np.append(y, obtenerValorDensidad(i))
 
-    pos = np.where(np.abs(np.diff(y)) >= mp.pi/2)[0]
-
-    x[pos] = np.nan
-    y[pos] = np.nan
-
-    plotFunction(x, y, 'densidad','f1(x)','upper right','#1C2833')
+    return (x, y)
 
 def construirFuncionAcumulada():
     # Para construir la funcion de probabilidad acumulada voy a integrar
     # por cada trozo de la funcion. Formalmente hablando, en cada trozo
     # se integra con los limites de -infinito a x
-    x = []
-    y = []      
+    x = np.arange(-5, 5, 0.01)
+    y = np.array([])
 
-    # Utilizo este rango de valores porque si es mucho más grande, la parábola que se genera se termina
-    # viendo como una linea recta vertical
-    for i in np.arange(-10, 10, 0.01):
-        x.append(i)
-        if (i>= -mp.pi/2 and i<= mp.pi/2):
-            a = 8 * (i ** 3) - (26 * (mp.pi ** 4)* i)
-            b = 13 * (mp.pi ** 5) + (mp.pi ** 3)
-            y.append((a - b) / (24 * mp.pi ** 3))
-        else:
-            y.append(0)
-    plotFunction(x, y,'distribucion','F1(x)','upper left','#1C2833')
+    for i in x:
+        y = np.append(y, obtenerValorAcumulada(i))
 
-
+    return (x, y)
 
 def main():
     print("TP 1 - Ejercicio 3")
     print("a) Graficar la función de densidad de probabilidad")
-    construirFuncionDensidad()
+    x,y = construirFuncionDensidad()
+
+    plot.plot(x, y)
+    plot.savefig(sys.path[0] + f"/E03-funcion-densidad.png")
+
+    # Utilizo estas funciones porque al guardar en distintos archivos, el plot sigue con
+    # el mismo gráfico que antes.
+    plot.clf()
+    plot.cla()
+    plot.close()
+    print(f"La función de densisas se guardó en {sys.path[0]}/E03-funcion-densidad.png")
 
     print("b) Calcular y graficar la función de probabilidad acumulada y su inversa.")
-    construirFuncionAcumulada()
+    x,y = construirFuncionAcumulada()
 
+    plot.title('Funcion probabilidad acumulada')
+    plot.plot(x, y, color="#FF4500") 
+    plot.savefig(sys.path[0] + f"/E03-funcion-acumulada.png")
+    plot.clf()
+    plot.cla()
+    plot.close()
+    print(f"La función de probabilidad acumulada se guardó en {sys.path[0]}/E03-funcion-acumulada.png")
+
+    plot.title('Funcion inversa de la funcion probabilidad acumulada')
+    plot.plot(y, x)
+    plot.savefig(sys.path[0] + f"/E03-funcion-inversa.png")
+    plot.clf()
+    plot.cla()
+    plot.close()
+    print(f"La función inversa se guardó en {sys.path[0]}/E03-funcion-inversa.png")
+
+    inversa = interp1d(y, x)
+    uniformes = np.random.uniform(0, 1, 100000) 
+    random_array_no_estandar = list(map(lambda x: inversa(x), uniformes)) 
+    plot.hist(random_array_no_estandar, bins=10)
+    plot.title('Histograma')
+    plot.savefig(sys.path[0] + f"/E03-histograma-inversa.png")
+    print(f"Histograma de la funcion inversa se guardó en {sys.path[0]}/E03-histograma-inversa.png")
 
 if __name__ == "__main__":
     main()
