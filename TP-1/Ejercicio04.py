@@ -22,7 +22,9 @@ def generar_random_array_estandar_aceptados():
     c = 2*(generar_normal_estandar(1))/generar_exponencial(1) # Derivando fX(x)/fY(y) e igualando a 0 se obtiene x = 1
 
     numeros = []
-    for i in range(cantidad):
+    numeros_aceptados = 0
+    numeros_rechazados = 0
+    while len(numeros) < cantidad:
         a = generar_inversa_exponencial(rn.random())
         prob_aceptar = generar_normal_estandar(a)/(c * generar_exponencial(a))
 
@@ -30,12 +32,17 @@ def generar_random_array_estandar_aceptados():
 
         if r1 <= prob_aceptar:
 
+            numeros_aceptados += 1
             r2 = rn.random()
 
             if r2 < 0.5:
                 numeros.append(a)
             else:
                 numeros.append(-a)
+        else:
+            numeros_rechazados += 1
+
+    print("Porcentaje de rechazo: ", numeros_rechazados * 100 / (numeros_rechazados + numeros_aceptados))
 
     return numeros
 
