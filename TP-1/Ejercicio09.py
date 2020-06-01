@@ -116,7 +116,7 @@ if ej == 'a':
     print("Ejecutando punto A)")
     anim = FuncAnimation(fig, animate_random_walk_ej_a, init_func=init, frames=CANT_INSTANTES, interval=1, repeat=False, fargs=(random_walk_cuatro_dirs,))
 
-    #Comentar la siguiente linea si no funciona, hay que instalar imagemagick
+    #Descomentar la siguiente linea para guardar la animación. Si no funciona, hay que instalar imagemagick
     #anim.save('E09-a.gif', writer='imagemagick')
     plt.show()
 
@@ -133,7 +133,7 @@ else:
     print("Ejecutando punto B) con pared en el medio superior")
     anim = FuncAnimation(fig, animate_random_walk_ej_b, init_func=init, frames=CANT_INSTANTES, interval=1, repeat=False, fargs=(random_walk_cuatro_dirs,))
 
-    #Comentar la siguiente linea si no funciona, hay que instalar imagemagick
+    #Descomentar la siguiente linea para guardar la animación. Si no funciona, hay que instalar imagemagick
     #anim.save('E09-b.gif', writer='imagemagick')
     plt.show()
 
