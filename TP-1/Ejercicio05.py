@@ -6,7 +6,7 @@ from scipy.stats import chi2
 
 INICIO_INTERVALO = 0.2
 FIN_INTERVALO = 0.5
-CANT_SIMULACIONES = 100000
+CANT_SIMULACIONES = 300000
 SIGNIFICANCIA_CHI2 = 0.01
 
 def gap_chi2 (frecuencias):
@@ -27,6 +27,7 @@ def gap_chi2 (frecuencias):
 		D2 += D2i
 	limiteSuperior = chi2.ppf(1 - SIGNIFICANCIA_CHI2, df=len(frecuencias) - 1)
 	print("Estadistico: {:.2f} ".format(D2))
+	print("Limite superior: {:.2f} ".format(limiteSuperior))
 	if D2 <= limiteSuperior:
 		print("El test acepta la hipotesis nula. Se comporta como una Geometrica.")
 	else:
