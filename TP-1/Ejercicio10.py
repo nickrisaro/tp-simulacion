@@ -51,7 +51,7 @@ class Persona:
             if not persona == self and not persona.sana:
                 distancia_entre_personas = np.sqrt((persona.x - self.x)**2 + (persona.y - self.y)**2)
                 if distancia_entre_personas <= DISTANCIA_CONTAGIO:
-                    self.sana = False
+                    self.sana = np.random.uniform(0, 1) <= PROBABILIDAD_CONTAGIO
                     break
 
 
@@ -96,7 +96,7 @@ def main():
         x = np.random.uniform(0, LIMIT_X)
         y = np.random.uniform(0, LIMIT_Y)
 
-        sana = np.random.uniform(0, 1) > PROPORCION_INICIAL_INFECTADAS
+        sana = np.random.uniform(0, 1) >= PROPORCION_INICIAL_INFECTADAS
 
         persona = Persona(x, y, sana)
         personas = np.append(personas, persona)
@@ -110,7 +110,6 @@ def main():
     fig = plt.figure()
     ax = plt.axes(xlim=(0, LIMIT_X), ylim=(0, LIMIT_Y))
     scat_personas = ax.scatter(personas_x, personas_y, s=100, c=colors)
-    ax.legend(loc="lower left", title="Instante 0")
 
     anim = FuncAnimation(fig, animate_random_walk, frames=CANT_INSTANTES, interval=1, repeat=False, fargs=(personas,scat_personas, ax))
     plt.show()
