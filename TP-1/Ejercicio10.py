@@ -15,6 +15,7 @@ CANT_INSTANTES = 4000
 CANT_PERSONAS = 100
 PROPORCION_INICIAL_INFECTADAS = 0.05
 PROBABILIDAD_CONTAGIO = 0.6
+DISTANCIA_CONTAGIO = 2.0
 
 class Persona:
 
@@ -40,8 +41,22 @@ class Persona:
         if self.esta_en_limites(new_x,new_y):
             self.x, self.y = new_x, new_y
 
+    def interactuar(self, personas):
+        """Esta función determina si una persona sana está en contacto con personas contagiadas y si se contagia. No determina si esta persona contagia a otras"""
+        if not self.sana:
+            return
+
+        for t in range(0, len(personas)):
+            persona = personas[t]
+            if not persona == self and not persona.sana:
+                distancia_entre_personas = np.sqrt((persona.x - self.x)**2 + (persona.y - self.y)**2)
+                if distancia_entre_personas <= DISTANCIA_CONTAGIO:
+                    self.sana = False
+                    break
+
+
 def animate_random_walk(instante, personas, scat_personas, ax):
-    """Esta funcion se ejecuta en cada frame del random walk aplicandole la funcion recibida por parametro a las "particulas" de cada gas obteniendo asi su nueva posicion"""
+    """Esta funcion se ejecuta en cada frame del random walk y hace que se muevan y, posiblemente, se contagien las personas"""
 
     personas_x = np.array([])
     personas_y = np.array([])
@@ -53,6 +68,10 @@ def animate_random_walk(instante, personas, scat_personas, ax):
         persona.desplazarse()
         personas_x = np.append(personas_x, persona.x)
         personas_y = np.append(personas_y, persona.y)
+
+    for t in range(0, len(personas)):
+        persona = personas[t]
+        persona.interactuar(personas)
         if persona.sana:
             colors = np.append(colors, "g")
             sanas += 1
