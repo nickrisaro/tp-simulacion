@@ -5,33 +5,16 @@ import matplotlib.animation as animation
 import os
 import sys
 from matplotlib.animation import FuncAnimation
+import matplotlib.patches as mpatches
 
 LIMIT_X = 100
 LIMIT_Y = 100
 RW_CUATRO_DIRS_VEL = 1
 
-CANT_INSTANTES = 3000
+CANT_INSTANTES = 4000
 CANT_PERSONAS = 100
 PROPORCION_INICIAL_INFECTADAS = 0.05
 PROBABILIDAD_CONTAGIO = 0.6
-
-def esta_en_limites(x,y):
-    return (0 <= x <= LIMIT_X and 0 <= y <= LIMIT_Y)
-
-def random_walk_cuatro_dirs(x,y):
-    """Esta funcion recibe la posicion de una persona y devuelve la nueva posicion para la misma dentro de los limites"""
-    siguientePaso = random.randint(1,4)
-    if siguientePaso == 1:
-        new_x,new_y = x + RW_CUATRO_DIRS_VEL, y
-    elif siguientePaso == 2:
-        new_x,new_y = x, y + RW_CUATRO_DIRS_VEL
-    elif siguientePaso == 3:
-        new_x,new_y = x - RW_CUATRO_DIRS_VEL, y
-    else:
-        new_x,new_y = x, y - RW_CUATRO_DIRS_VEL
-    if not esta_en_limites(new_x,new_y):
-        return x,y
-    return new_x,new_y
 
 class Persona:
 
@@ -40,26 +23,49 @@ class Persona:
         self.x = x
         self.y = y
 
-def animate_random_walk(instante, random_walk_func, personas, scat_personas, ax):
+    def esta_en_limites(self, x,y):
+        return (0 <= x <= LIMIT_X and 0 <= y <= LIMIT_Y)
+
+    def desplazarse(self):
+        siguientePaso = random.randint(1,4)
+        if siguientePaso == 1:
+            new_x,new_y = self.x + RW_CUATRO_DIRS_VEL, self.y
+        elif siguientePaso == 2:
+            new_x,new_y = self.x, self.y + RW_CUATRO_DIRS_VEL
+        elif siguientePaso == 3:
+            new_x,new_y = self.x - RW_CUATRO_DIRS_VEL, self.y
+        else:
+            new_x,new_y = self.x, self.y - RW_CUATRO_DIRS_VEL
+
+        if self.esta_en_limites(new_x,new_y):
+            self.x, self.y = new_x, new_y
+
+def animate_random_walk(instante, personas, scat_personas, ax):
     """Esta funcion se ejecuta en cada frame del random walk aplicandole la funcion recibida por parametro a las "particulas" de cada gas obteniendo asi su nueva posicion"""
-    ax.legend(loc="lower left", title="Instante {0}".format(instante))
 
     personas_x = np.array([])
     personas_y = np.array([])
     colors = np.array([])
+    sanas, infectadas = 0, 0
+
     for t in range(0, len(personas)):
         persona = personas[t]
-        persona.x,persona.y = random_walk_func(persona.x,persona.y)
+        persona.desplazarse()
         personas_x = np.append(personas_x, persona.x)
         personas_y = np.append(personas_y, persona.y)
         if persona.sana:
             colors = np.append(colors, "g")
+            sanas += 1
         else:
             colors = np.append(colors, "r")
+            infectadas += 1
 
     coordenadas = np.column_stack((personas_x,personas_y))
     scat_personas.set_offsets(coordenadas)
     scat_personas.set_color(colors)
+    red_patch = mpatches.Patch(color="red", label="Infectadas {0}".format(infectadas))
+    green_patch = mpatches.Patch(color="green", label="Sanas {0}".format(sanas))
+    ax.legend(handles=[red_patch, green_patch], loc="lower left", title="Instante {0}".format(instante))
 
 def main():
 
@@ -82,16 +88,12 @@ def main():
         else:
             colors = np.append(colors, "r")
 
-    coordenadas = np.column_stack((personas_x,personas_y))
-
-
     fig = plt.figure()
     ax = plt.axes(xlim=(0, LIMIT_X), ylim=(0, LIMIT_Y))
     scat_personas = ax.scatter(personas_x, personas_y, s=100, c=colors)
     ax.legend(loc="lower left", title="Instante 0")
-    scat_personas.set_offsets(coordenadas)
 
-    anim = FuncAnimation(fig, animate_random_walk, frames=CANT_INSTANTES, interval=1, repeat=False, fargs=(random_walk_cuatro_dirs,personas,scat_personas, ax))
+    anim = FuncAnimation(fig, animate_random_walk, frames=CANT_INSTANTES, interval=1, repeat=False, fargs=(personas,scat_personas, ax))
     plt.show()
 
 if __name__ == "__main__":
