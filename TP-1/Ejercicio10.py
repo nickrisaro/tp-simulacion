@@ -16,6 +16,8 @@ CANT_PERSONAS = 100
 PROPORCION_INICIAL_INFECTADAS = 0.05
 PROBABILIDAD_CONTAGIO = 0.6
 DISTANCIA_CONTAGIO = 2.0
+TIEMPO_HASTA_SANAR = 20
+PROBABILIDAD_SANAR = 0.8
 
 class Grafico_epidemia:
     def __init__(self, axes):
@@ -28,6 +30,7 @@ class Grafico_epidemia:
         line_sanas.axes.axis([0, CANT_INSTANTES, 0, CANT_PERSONAS])
         self.grafico_linea_sanas = line_sanas
         self.grafico_linea_infectadas = line_infectadas
+        self.informar_100_porciento = True
 
     def actualizar_grafico_linea(self, instante, sanas, infectadas):
 
@@ -41,18 +44,29 @@ class Grafico_epidemia:
         self.grafico_linea_infectadas.set_data(self.instantes, self.personas_infectadas)
         self.grafico_linea_sanas.axes.axis([0, CANT_INSTANTES, 0, CANT_PERSONAS])
         self.grafico_linea_sanas.axes.legend(handles=[red_patch, green_patch], loc="lower right", title="Instante {0}".format(instante))
+        if self.informar_100_porciento and infectadas == 100:
+            print("Se alcanzó el 100% de infecciones en el instante {0}".format(instante))
+            self.informar_100_porciento = False
 
 class Persona:
 
-    def __init__(self, x, y, sana = True):
+    def __init__(self, x, y, sana = True, inmovilizada = False, se_inmoviliza_al_infectarse = False, puede_sanar = False):
         self.sana = sana
         self.x = x
         self.y = y
+        self.inmovilizada = inmovilizada
+        self.puede_sanar = puede_sanar
+        self.se_inmoviliza_al_infectarse = se_inmoviliza_al_infectarse
+        self.tiempo_hasta_inmovilizarse = np.random.randint(10, 21)
+        if not self.sana:
+            self.instante_contagio = 0
 
     def esta_en_limites(self, x,y):
         return (0 <= x <= LIMITE_X and 0 <= y <= LIMITE_Y)
 
     def desplazarse(self):
+        if self.inmovilizada:
+            return
         siguientePaso = random.randint(1,4)
         if siguientePaso == 1:
             new_x,new_y = self.x + VELOCIDAD, self.y
@@ -66,7 +80,7 @@ class Persona:
         if self.esta_en_limites(new_x,new_y):
             self.x, self.y = new_x, new_y
 
-    def interactuar(self, personas):
+    def interactuar(self, personas, instante):
         """Esta función determina si una persona sana está en contacto con personas contagiadas y si se contagia. No determina si esta persona contagia a otras"""
         if not self.sana:
             return
@@ -79,6 +93,22 @@ class Persona:
                     self.sana = np.random.uniform(0, 1) <= PROBABILIDAD_CONTAGIO
                     break
 
+        if not self.sana:
+            self.instante_contagio = instante
+
+    def actualizar(self, instante):
+        self.desplazarse()
+        if not self.sana and self.se_inmoviliza_al_infectarse:
+            print("Puede inmovilizarse")
+            print("Instante contagio {0} instante actual {1}".format(self.instante_contagio, instante))
+        if not self.sana and self.puede_sanar and instante >= self.instante_contagio + TIEMPO_HASTA_SANAR:
+            self.sana = np.random.uniform(0, 1) <= PROBABILIDAD_SANAR
+            if self.sana:
+                self.inmovilizada = False
+
+        if not self.sana and self.se_inmoviliza_al_infectarse and instante >= self.instante_contagio + self.tiempo_hasta_inmovilizarse:
+            self.inmovilizada = True
+
 def animate_random_walk(instante, personas, scat_personas, grafico_epidemia):
     """Esta funcion se ejecuta en cada frame del random walk y hace que se muevan y, posiblemente, se contagien las personas"""
 
@@ -89,13 +119,14 @@ def animate_random_walk(instante, personas, scat_personas, grafico_epidemia):
 
     for t in range(0, len(personas)):
         persona = personas[t]
-        persona.desplazarse()
+        persona.actualizar(instante)
         personas_x = np.append(personas_x, persona.x)
         personas_y = np.append(personas_y, persona.y)
 
+    # TODO ver una manera más eficiente de hacer esto
     for t in range(0, len(personas)):
         persona = personas[t]
-        persona.interactuar(personas)
+        persona.interactuar(personas, instante)
         if persona.sana:
             colors = np.append(colors, "g")
             sanas += 1
@@ -120,8 +151,12 @@ def main():
         y = np.random.uniform(0, LIMITE_Y)
 
         sana = np.random.uniform(0, 1) >= PROPORCION_INICIAL_INFECTADAS
+        # TODO Un parámetro determina si se aplica esto o no
+        inmovilizada = np.random.uniform(0, 1) >= 0.5
+        inmovilizar_cuando_se_infecta = True
+        puede_sanar = False
 
-        persona = Persona(x, y, sana)
+        persona = Persona(x, y, sana, inmovilizada, inmovilizar_cuando_se_infecta, puede_sanar)
         personas = np.append(personas, persona)
         personas_x = np.append(personas_x, persona.x)
         personas_y = np.append(personas_y, persona.y)
