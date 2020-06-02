@@ -1,3 +1,4 @@
+import argparse
 import matplotlib.animation as animation
 import matplotlib.patches as mpatches
 import matplotlib.pylab as plt
@@ -26,6 +27,11 @@ class Grafico_epidemia:
         line_sanas.axes.axis([0, CANT_INSTANTES, 0, CANT_PERSONAS])
         self.grafico_linea_sanas = line_sanas
         self.grafico_linea_infectadas = line_infectadas
+        self.informar_0_porciento = True
+        self.informar_50_porciento = True
+        self.informar_75_porciento = True
+        self.informar_90_porciento = True
+        self.informar_95_porciento = True
         self.informar_100_porciento = True
 
     def actualizar_grafico_linea(self, instante, sanas, infectadas):
@@ -40,6 +46,22 @@ class Grafico_epidemia:
         self.grafico_linea_infectadas.set_data(self.instantes, self.personas_infectadas)
         self.grafico_linea_sanas.axes.axis([0, CANT_INSTANTES, 0, CANT_PERSONAS])
         self.grafico_linea_sanas.axes.legend(handles=[red_patch, green_patch], loc="lower right", title="Instante {0}".format(instante))
+
+        if self.informar_0_porciento and infectadas == 0:
+            print("Se alcanzó el 0% de infecciones en el instante {0}".format(instante))
+            self.informar_0_porciento = False
+        if self.informar_50_porciento and infectadas >= 50:
+            print("Se alcanzó el 50% de infecciones en el instante {0}".format(instante))
+            self.informar_50_porciento = False
+        if self.informar_75_porciento and infectadas >= 75:
+            print("Se alcanzó el 75% de infecciones en el instante {0}".format(instante))
+            self.informar_75_porciento = False
+        if self.informar_90_porciento and infectadas >= 90:
+            print("Se alcanzó el 90% de infecciones en el instante {0}".format(instante))
+            self.informar_90_porciento = False
+        if self.informar_95_porciento and infectadas >= 95:
+            print("Se alcanzó el 95% de infecciones en el instante {0}".format(instante))
+            self.informar_95_porciento = False
         if self.informar_100_porciento and infectadas == 100:
             print("Se alcanzó el 100% de infecciones en el instante {0}".format(instante))
             self.informar_100_porciento = False
@@ -63,7 +85,7 @@ class Persona:
     def desplazarse(self):
         if self.inmovilizada:
             return
-        siguientePaso = np.random.randint(1,4)
+        siguientePaso = np.random.randint(1,5)
         if siguientePaso == 1:
             new_x,new_y = self.x + VELOCIDAD, self.y
         elif siguientePaso == 2:
@@ -86,7 +108,7 @@ class Persona:
             if not persona == self and not persona.sana:
                 distancia_entre_personas = np.sqrt((persona.x - self.x)**2 + (persona.y - self.y)**2)
                 if distancia_entre_personas <= DISTANCIA_CONTAGIO:
-                    self.sana = np.random.uniform(0, 1) <= PROBABILIDAD_CONTAGIO
+                    self.sana = np.random.uniform(0, 1) >= PROBABILIDAD_CONTAGIO
                     break
 
         if not self.sana:
@@ -94,9 +116,6 @@ class Persona:
 
     def actualizar(self, instante):
         self.desplazarse()
-        if not self.sana and self.se_inmoviliza_al_infectarse:
-            print("Puede inmovilizarse")
-            print("Instante contagio {0} instante actual {1}".format(self.instante_contagio, instante))
         if not self.sana and self.puede_sanar and instante >= self.instante_contagio + TIEMPO_HASTA_SANAR:
             self.sana = np.random.uniform(0, 1) <= PROBABILIDAD_SANAR
             if self.sana:
@@ -138,6 +157,12 @@ def animate_random_walk(instante, personas, scat_personas, grafico_epidemia):
 
 def main():
 
+    args = parser.parse_args()
+    print(args)
+    inmovilizar_cuando_se_infecta = args.estrategia == "2"
+    puede_sanar = args.modelo == "B"
+    inicial_inmovilizada = args.estrategia == "3"
+
     personas = np.array([])
     personas_x = np.array([])
     personas_y = np.array([])
@@ -147,10 +172,10 @@ def main():
         y = np.random.uniform(0, LIMITE_Y)
 
         sana = np.random.uniform(0, 1) >= PROPORCION_INICIAL_INFECTADAS
-        # TODO Un parámetro determina si se aplica esto o no
-        inmovilizada = np.random.uniform(0, 1) >= 0.5
-        inmovilizar_cuando_se_infecta = True
-        puede_sanar = False
+
+        inmovilizada = False
+        if inicial_inmovilizada:
+            inmovilizada = np.random.uniform(0, 1) >= 0.5
 
         persona = Persona(x, y, sana, inmovilizada, inmovilizar_cuando_se_infecta, puede_sanar)
         personas = np.append(personas, persona)
@@ -170,6 +195,17 @@ def main():
 
     anim = animation.FuncAnimation(fig, animate_random_walk, frames=CANT_INSTANTES, interval=1, repeat=False, fargs=(personas,scat_personas, grafico_epidemia))
     plt.show()
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-m", "-modelo", dest="modelo",
+                    choices=["A", "B"], help="""El modelo a simular
+                                                A: Las personas enfermas no se curan
+                                                B: Las personas enfermas se curan en 20 instantes de tiempo""")
+parser.add_argument("-e", "-estrategia", dest="estrategia",
+                    choices=["1", "2", "3"], help="""La estrategia a utilizar
+                                                     1: Todos los individuos se mueven
+                                                     2: Sólo se mueven los sanos
+                                                     3: Se mueve la mitad de la población""")
 
 if __name__ == "__main__":
     main()
