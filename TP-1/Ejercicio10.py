@@ -1,11 +1,7 @@
-import numpy as np
-import random
-import matplotlib.pylab as plt
 import matplotlib.animation as animation
-import os
-import sys
-from matplotlib.animation import FuncAnimation
 import matplotlib.patches as mpatches
+import matplotlib.pylab as plt
+import numpy as np
 
 LIMITE_X = 100
 LIMITE_Y = 100
@@ -67,7 +63,7 @@ class Persona:
     def desplazarse(self):
         if self.inmovilizada:
             return
-        siguientePaso = random.randint(1,4)
+        siguientePaso = np.random.randint(1,4)
         if siguientePaso == 1:
             new_x,new_y = self.x + VELOCIDAD, self.y
         elif siguientePaso == 2:
@@ -172,7 +168,7 @@ def main():
 
     grafico_epidemia = Grafico_epidemia(axs[1])
 
-    anim = FuncAnimation(fig, animate_random_walk, frames=CANT_INSTANTES, interval=1, repeat=False, fargs=(personas,scat_personas, grafico_epidemia))
+    anim = animation.FuncAnimation(fig, animate_random_walk, frames=CANT_INSTANTES, interval=1, repeat=False, fargs=(personas,scat_personas, grafico_epidemia))
     plt.show()
 
 if __name__ == "__main__":
