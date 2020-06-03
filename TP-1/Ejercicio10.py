@@ -194,7 +194,11 @@ def main():
     grafico_epidemia = Grafico_epidemia(axs[1])
 
     anim = animation.FuncAnimation(fig, animate_random_walk, frames=CANT_INSTANTES, interval=1, repeat=False, fargs=(personas,scat_personas, grafico_epidemia))
-    plt.show()
+    if args.video:
+        writer = animation.FFMpegWriter(fps=15, bitrate=1800)
+        anim.save("Ejercicio-10-modelo-{0}-estrategia-{1}.mp4".format(args.modelo, args.estrategia), writer=writer)
+    else:
+        plt.show()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "-modelo", dest="modelo",
@@ -206,6 +210,7 @@ parser.add_argument("-e", "-estrategia", dest="estrategia",
                                                      1: Todos los individuos se mueven
                                                      2: Sólo se mueven los sanos
                                                      3: Se mueve la mitad de la población""")
+parser.add_argument("-v", "-video", dest="video", action="store_true", help="Si está presente se guarda la animación en mp4 si no se muestra")
 
 if __name__ == "__main__":
     main()
