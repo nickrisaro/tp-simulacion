@@ -3,18 +3,25 @@ import numpy as np
 from scipy.integrate import odeint
 import sys
 
-MOSTRAR_GRAFICO = False
+# Parámetros de la enfermedad
+BETA = 0.27
+GAMMA = 0.043
+
 DIAS = 200
 PORCENTAJE_CONTAGIO_INICIAL = 0.03
 PORCENTAJE_FIN_EPIDEMIA = 0.01
-BETA = 0.27
-GAMMA = 0.043
 PORCENTAJE_CAMAS_POBLACION = 0.3
 PORCENTAJE_POBLACION_EN_CUARENTENA = 0.35
+
+MOSTRAR_GRAFICO = False
 TIEMPO = np.linspace(0, DIAS, DIAS)
 CAMAS = np.full(DIAS, PORCENTAJE_CAMAS_POBLACION)
 
 def SIR(y, t):
+    """
+    Esta función será invocada por el método de resolución de ecuaciones diferenciales
+    Para cada instante de tiempo t calcula los nuevos valores de S, I y R
+    """
     S, I, R = y
     dsdt = -BETA*S*I
     didt = BETA*S*I - GAMMA*I
@@ -22,6 +29,11 @@ def SIR(y, t):
     return dsdt, didt, drdt
 
 def simular_sin_cuarentena():
+    """
+    Realiza una simulación sin cuarentena del modelo SIR
+    Toda la población es susceptible de contagiarse
+    Retorna todos los valores de S, I y R para cada instante de tiempo
+    """
     I = PORCENTAJE_CONTAGIO_INICIAL
     S = 1 - I
     R = 0
@@ -31,6 +43,11 @@ def simular_sin_cuarentena():
     return ret.T
 
 def simular_con_cuarentena():
+    """
+    Realiza una simulación con cuarentena del modelo SIR
+    Un porcentaje de la población no es susceptible de contagiarse
+    Retorna todos los valores de S, I y R para cada instante de tiempo
+    """
     I = PORCENTAJE_CONTAGIO_INICIAL
     S = 1 - I - PORCENTAJE_POBLACION_EN_CUARENTENA
     R = 0
@@ -40,6 +57,9 @@ def simular_con_cuarentena():
     return ret.T
 
 def imprimir_informacion(SIR, modelo):
+    """
+    Calcula e imprime por consola algunos valores relevantes de la simulación
+    """
     S, I, R = SIR
     dia_pico_infectados = 0
     maximo_infectados = 0
@@ -67,6 +87,9 @@ def imprimir_informacion(SIR, modelo):
     return SIR
 
 def graficar(SIR, modelo):
+    """
+    Realiza un gráfico con la evolución de las 3 variables del modelo respecto del tiempo
+    """
     S, I, R = SIR
     fig = plt.figure(facecolor='w')
     ax = fig.add_subplot(111, facecolor='#dddddd', axisbelow=True)
