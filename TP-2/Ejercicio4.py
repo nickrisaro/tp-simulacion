@@ -3,28 +3,39 @@ import numpy as np
 from scipy.integrate import odeint
 import sys
 
-MOSTRAR_GRAFICO = False
-DIAS = 200
-POBALCION_TOTAL = 1000
-PORCENTAJE_CONTAGIO_INICIAL = 0.03
-PORCENTAJE_FIN_EPIDEMIA = 0.01
+# Parámetros de la enfermedad
 BETA = 0.27
 GAMMA = 0.043
+
+DIAS = 200
+PORCENTAJE_CONTAGIO_INICIAL = 0.03
+PORCENTAJE_FIN_EPIDEMIA = 0.01
 PORCENTAJE_CAMAS_POBLACION = 0.3
 PORCENTAJE_POBLACION_EN_CUARENTENA = 0.35
+
+MOSTRAR_GRAFICO = False
 TIEMPO = np.linspace(0, DIAS, DIAS)
 CAMAS = np.full(DIAS, PORCENTAJE_CAMAS_POBLACION)
 
 def SIR(y, t):
+    """
+    Esta función será invocada por el método de resolución de ecuaciones diferenciales
+    Para cada instante de tiempo t calcula los nuevos valores de S, I y R
+    """
     S, I, R = y
-    dsdt = -BETA*S*I/POBALCION_TOTAL
-    didt = BETA*S*I/POBALCION_TOTAL - GAMMA*I
+    dsdt = -BETA*S*I
+    didt = BETA*S*I - GAMMA*I
     drdt = GAMMA*I
     return dsdt, didt, drdt
 
 def simular_sin_cuarentena():
-    I = POBALCION_TOTAL*PORCENTAJE_CONTAGIO_INICIAL
-    S = POBALCION_TOTAL - I
+    """
+    Realiza una simulación sin cuarentena del modelo SIR
+    Toda la población es susceptible de contagiarse
+    Retorna todos los valores de S, I y R para cada instante de tiempo
+    """
+    I = PORCENTAJE_CONTAGIO_INICIAL
+    S = 1 - I
     R = 0
     y0 = [S, I, R]
 
@@ -32,8 +43,13 @@ def simular_sin_cuarentena():
     return ret.T
 
 def simular_con_cuarentena():
-    I = POBALCION_TOTAL*PORCENTAJE_CONTAGIO_INICIAL
-    S = POBALCION_TOTAL - I - PORCENTAJE_POBLACION_EN_CUARENTENA*POBALCION_TOTAL
+    """
+    Realiza una simulación con cuarentena del modelo SIR
+    Un porcentaje de la población no es susceptible de contagiarse
+    Retorna todos los valores de S, I y R para cada instante de tiempo
+    """
+    I = PORCENTAJE_CONTAGIO_INICIAL
+    S = 1 - I - PORCENTAJE_POBLACION_EN_CUARENTENA
     R = 0
     y0 = [S, I, R]
 
@@ -41,6 +57,9 @@ def simular_con_cuarentena():
     return ret.T
 
 def imprimir_informacion(SIR, modelo):
+    """
+    Calcula e imprime por consola algunos valores relevantes de la simulación
+    """
     S, I, R = SIR
     dia_pico_infectados = 0
     maximo_infectados = 0
@@ -51,14 +70,14 @@ def imprimir_informacion(SIR, modelo):
             maximo_infectados = I[dia]
             dia_pico_infectados = dia
 
-        if I[dia] < POBALCION_TOTAL*PORCENTAJE_FIN_EPIDEMIA and dia_fin_enfermedad is 0:
+        if I[dia] < PORCENTAJE_FIN_EPIDEMIA and dia_fin_enfermedad is 0:
             dia_fin_enfermedad = dia
 
-        if I[dia] >= POBALCION_TOTAL*PORCENTAJE_CAMAS_POBLACION and dia_saturacion is 0:
+        if I[dia] >= PORCENTAJE_CAMAS_POBLACION and dia_saturacion is 0:
             dia_saturacion = dia
 
     print("Información del modelo " + modelo)
-    print("El pico de la enfermedad fue el día {0} con {1:.2f} infectados".format(dia_pico_infectados, maximo_infectados))
+    print("El pico de la enfermedad fue el día {0} con el {1:.2f}% de la población infectada".format(dia_pico_infectados, maximo_infectados*100))
     print("La epidemia duró {0} días".format(dia_fin_enfermedad))
     if dia_saturacion is not 0:
         print("El sistema de salud se saturó el día", dia_saturacion)
@@ -68,16 +87,19 @@ def imprimir_informacion(SIR, modelo):
     return SIR
 
 def graficar(SIR, modelo):
+    """
+    Realiza un gráfico con la evolución de las 3 variables del modelo respecto del tiempo
+    """
     S, I, R = SIR
     fig = plt.figure(facecolor='w')
     ax = fig.add_subplot(111, facecolor='#dddddd', axisbelow=True)
-    ax.plot(TIEMPO, S/POBALCION_TOTAL, 'b', alpha=0.5, lw=2, label='Susceptibles')
-    ax.plot(TIEMPO, I/POBALCION_TOTAL, 'r', alpha=0.5, lw=2, label='Infectados')
-    ax.plot(TIEMPO, R/POBALCION_TOTAL, 'g', alpha=0.5, lw=2, label='Recuperados')
-    ax.plot(TIEMPO, CAMAS, 'black', alpha=0.5, lw=2, label='Capacidad del sistema sanitario')
+    ax.plot(TIEMPO, S*100, 'b', alpha=0.5, lw=2, label='Susceptibles')
+    ax.plot(TIEMPO, I*100, 'r', alpha=0.5, lw=2, label='Infectados')
+    ax.plot(TIEMPO, R*100, 'g', alpha=0.5, lw=2, label='Recuperados')
+    ax.plot(TIEMPO, CAMAS*100, 'black', alpha=0.5, lw=2, label='Capacidad del sistema sanitario')
     ax.set_xlabel('Tiempo / días')
     ax.set_ylabel('% población')
-    ax.set_ylim(0,1.2)
+    ax.set_ylim(0,100)
     ax.yaxis.set_tick_params(length=0)
     ax.xaxis.set_tick_params(length=0)
     ax.grid(b=True, which='major', c='w', lw=2, ls='-')
