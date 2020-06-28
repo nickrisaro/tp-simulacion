@@ -1,8 +1,6 @@
 import numpy as np
 
-def calcular_tiempos_espera(t, media):
-
-    tiempos_procesamiento = np.random.exponential(media, len(t))
+def calcular_tiempos_espera(t, tiempos_procesamiento):
 
     tiempos_de_espera = [0]
     for i in range(1, len(t)):
@@ -33,11 +31,14 @@ def simular_opcion_1(t, N):
             t2.append(t[i])
 
     #Calculo tiempos de espera para la unidad 1
-    tiempos_espera_u1 = calcular_tiempos_espera(t1, media_u1)
+    tiempos_procesamiento_u1 = np.random.exponential(media_u1, len(t1))
+    tiempos_espera_u1 = calcular_tiempos_espera(t1, tiempos_procesamiento_u1)
 
     #Calculo tiempos de espera para la unidad 1
-    tiempos_espera_u2 = calcular_tiempos_espera(t2, media_u2)
+    tiempos_procesamiento_u2 = np.random.exponential(media_u2, len(t2))
+    tiempos_espera_u2 = calcular_tiempos_espera(t2, tiempos_procesamiento_u2)
 
+    tiempos_procesamiento_totales = np.concatenate((tiempos_procesamiento_u1, tiempos_procesamiento_u2), axis=None)
     tiempos_espera_totales = np.concatenate((tiempos_espera_u1, tiempos_espera_u2), axis=None)
 
     print("El tiempo medio de espera entre que la solicitud llega y puede ser procesada es de: " + str(np.mean(tiempos_espera_totales)))
@@ -48,6 +49,31 @@ def simular_opcion_1(t, N):
             cantidad_solicitudes_sin_espera += 1
 
     print("La cantidad de solicitudes que no necesitaron esperar para ser procesadas es de " + str(cantidad_solicitudes_sin_espera) + " sobre un total de 100000")
+
+    tiempos_resolucion_diagnosticos = tiempos_espera_totales + tiempos_procesamiento_totales
+
+    print("El tiempo promedio de resolucion de diagnosticos es de " + str(np.mean(tiempos_resolucion_diagnosticos)))
+
+def simular_opcion_2(t, N):
+    media_2 = 0.8
+
+    #Calculo tiempos de espera
+    tiempos_procesamiento = np.random.exponential(media_2, len(t))
+    tiempos_espera = calcular_tiempos_espera(t, tiempos_procesamiento)
+
+    print("El tiempo medio de espera entre que la solicitud llega y puede ser procesada es de: " + str(np.mean(tiempos_espera)))
+
+    cantidad_solicitudes_sin_espera = 0
+    for i in range(0, len(tiempos_espera)):
+        if tiempos_espera[i] == 0:
+            cantidad_solicitudes_sin_espera += 1
+
+    print("La cantidad de solicitudes que no necesitaron esperar para ser procesadas es de " + str(cantidad_solicitudes_sin_espera) + " sobre un total de 100000")
+
+    tiempos_resolucion_diagnosticos = tiempos_espera + tiempos_procesamiento
+
+    print("El tiempo promedio de resolucion de diagnosticos es de " + str(np.mean(tiempos_resolucion_diagnosticos)))
+
 
 def main():
     print ("TP2 - Ejercicio 1")
@@ -66,10 +92,10 @@ def main():
     print("c) La opcion 1 es mas costosa que la segunda opcion y el instituto solo acepta realizar la inversion si el tiempo medio")
     print("que demora en resolver cada diagnostico (tiempo en fila + tiempo de procesamiento) es como minimo 50% menor")
     print("que la opcion 2. Que solucion le recomienda?")
+    print("")
 
     N = 100000
 
-    media_2 = 0.8
     media_llegada_muestras = 4
 
     #Genero N tiempos entre arribos
@@ -77,7 +103,17 @@ def main():
     t = np.concatenate(([0], np.cumsum(tiempos_de_arribo)), axis=None)
 
     #OPCION 1
+    print("-----OPCION 1-----")
     simular_opcion_1(t, N)
+
+    print("")
+
+    #OPCION 2
+    print("-----OPCION 2-----")
+    simular_opcion_2(t)
+
+    print("")
+
 
 if __name__ == "__main__":
     main()
