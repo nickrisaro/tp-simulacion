@@ -11,16 +11,19 @@ def simular(ms):
 	estados = []
 	cantidadEnCola = 0
 	cantidadVecesInactiva = 0
+	PROBABILIDAD_NUEVA_SOLICITUD = p*(1-q)
+	PROBABILIDAD_DE_TERMINAR = q*(1-p)
 	# tiempo = 0
 	for tiempo in range(ms):
-		if (rn.random() <= p):
+		if (rn.random() <= PROBABILIDAD_NUEVA_SOLICITUD):
 			cantidadEnCola += 1
-		if (rn.random() <= q and cantidadEnCola > 0):
+		if (rn.random() <= PROBABILIDAD_DE_TERMINAR and cantidadEnCola > 0):
 			cantidadEnCola -=1
 		tiempos.append(tiempo)
 		estados.append(cantidadEnCola)
 		if (cantidadEnCola == 0):
 			cantidadVecesInactiva+=1
+
 	return tiempos, estados, cantidadVecesInactiva
 
 
