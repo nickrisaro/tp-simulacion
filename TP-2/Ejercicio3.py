@@ -95,7 +95,7 @@ def simular_anual(k_a, transicion, valores_a, intervalos):
 def main():   
 	valores_a = obtener_valores_desde_archivo("accion A.csv")
 	porcentajes = obtener_porcentajes(valores_a)
-	k_a = 20#math.ceil(1 + math.log2(len(valores_a))) #cantidad de intervalos que voy a tener segun Sturges (estos seran nuestros estados)
+	k_a = math.ceil(1 + math.log2(len(valores_a))) #cantidad de intervalos que voy a tener segun Sturges (estos seran nuestros estados)
 	intervalos = armar_intervalos(porcentajes, k_a)
 	print("Los posibles estados de A son:")
 	print(intervalos)
@@ -108,7 +108,7 @@ def main():
 		transicion_elevada = np.dot(transicion_elevada, transicion)
 	print("La cantidad de tiempo que la acción A pasa en cada estado es:")
 	print(transicion_elevada[0])
-
+	
 #Descomentar para probar 100 corridas. Guarda los maximos a un archivo de texto	
 	#maxs = []
 	#for i in range(0,100):
