@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.integrate import odeint
+from scipy.integrate import solve_ivp
 import sys
 
 # Parámetros de la enfermedad
@@ -17,7 +17,7 @@ MOSTRAR_GRAFICO = False
 TIEMPO = np.linspace(0, DIAS, DIAS)
 CAMAS = np.full(DIAS, PORCENTAJE_CAMAS_POBLACION)
 
-def SIR(y, t):
+def SIR(t, y):
     """
     Esta función será invocada por el método de resolución de ecuaciones diferenciales
     Para cada instante de tiempo t calcula los nuevos valores de S, I y R
@@ -39,8 +39,8 @@ def simular_sin_cuarentena():
     R = 0
     y0 = [S, I, R]
 
-    ret = odeint(SIR, y0, TIEMPO)
-    return ret.T
+    ret = solve_ivp(SIR, [0, 200], y0, t_eval=TIEMPO)
+    return ret.y
 
 def simular_con_cuarentena():
     """
@@ -53,8 +53,8 @@ def simular_con_cuarentena():
     R = 0
     y0 = [S, I, R]
 
-    ret = odeint(SIR, y0, TIEMPO)
-    return ret.T
+    ret = solve_ivp(SIR, [0, 200], y0, t_eval=TIEMPO)
+    return ret.y
 
 def imprimir_informacion(SIR, modelo):
     """
