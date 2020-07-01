@@ -59,7 +59,11 @@ for x in rango_simulaciones:
 	tiempos, estados, cantidadVecesInactiva = simular(tiempo)
 	cantidades_inactivas.append(cantidadVecesInactiva)
 
+print (max(cantidades_inactivas))
+print (min(cantidades_inactivas))
 plt.figure(figsize=(15,9))
 plt.plot( rango_simulaciones, cantidades_inactivas)
 plt.savefig(sys.path[0] + "/E02-cantidad-veces-inactivas-por-instante.png") 
-print(sum(cantidades_inactivas) / ( tiempo * cantidad_simu ) * 100 , "%")
+print("Minimo veces inactivas", max(cantidades_inactivas))
+print("Maximo de veces inactivas", min(cantidades_inactivas) )
+print("Promedio de veces inactivas", sum(cantidades_inactivas) / ( tiempo * cantidad_simu ) * 100 , "%")
