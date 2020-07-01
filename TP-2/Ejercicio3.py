@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import random
 
 def get_centro_intervalo_for_estado(estado, intervalos):
-	return (random.uniform(intervalos[estado][0], intervalos[estado][1]))
+	"Devuelve el valor medio del intervalo para un estado dado"
+	return (intervalos[estado][0] + intervalos[estado][1])/2
+	#return (random.uniform(intervalos[estado][0], intervalos[estado][1]))
 
 def get_estado(value, intervalos):
 	"Devuelve el estado segun si el valor se encuentra en alguno de los intervalos posibles. -1 si no"
@@ -15,7 +17,7 @@ def get_estado(value, intervalos):
 	return -1
 
 def obtener_valores_desde_archivo(filename_accion):
-	"Devuelve el diccionario de estados de la accion recibida por parametro"
+	"Devuelve la lista de estados de la accion recibida por parametro"
 	with open(filename_accion) as f:
 		reader = csv.reader(f)
 		valores = np.empty(0)
@@ -26,6 +28,7 @@ def obtener_valores_desde_archivo(filename_accion):
 		return valores
 
 def obtener_porcentajes(valores):
+	"Calcula las transiciones entre valores como porcentajes y devuelve una lista con los mismos por orden de aparicion"
 	posibles_porcentajes = np.empty(0)
 	for i in range (0, len(valores)):
 		if i == len(valores) - 1:
@@ -35,9 +38,10 @@ def obtener_porcentajes(valores):
 	return posibles_porcentajes
 
 def armar_intervalos(porcentajes, cant_clases):
+	"Genera la la lista de intervalos en base a la lista de porcentajes y la cantidad de clases"
 	min_porcentaje = min(porcentajes)
 	max_porcentaje = max(porcentajes)
-	ancho_intervalo = ((max_porcentaje - min_porcentaje)/ cant_clases)
+	ancho_intervalo = math.ceil((max_porcentaje - min_porcentaje)/ cant_clases)
 	aux_acc = min_porcentaje
 	intervalos = []
 	while (aux_acc <= max_porcentaje):
@@ -46,14 +50,15 @@ def armar_intervalos(porcentajes, cant_clases):
 	return intervalos
 
 def pruebas_get_estado_a(intervalos):
-	#assert(get_estado(55, intervalos) == 0)
-	#assert(get_estado(47, intervalos) == -1)
-	#assert(get_estado(290, intervalos) == -1)
-	#assert(get_estado(82, intervalos) == 1)
-	#assert(get_estado(48, intervalos) == 0)
+	assert(get_estado(55, intervalos) == 0)
+	assert(get_estado(47, intervalos) == -1)
+	assert(get_estado(290, intervalos) == -1)
+	assert(get_estado(82, intervalos) == 1)
+	assert(get_estado(48, intervalos) == 0)
 	return
 
 def generar_matriz_transicion(intervalos, porcentajes):
+	"Genera la matriz de transición a partir de la lista de intervalos y la lista de porcentajes"
 	transicion = np.zeros((len(intervalos), len(intervalos)))
 	for i in range(0, len(porcentajes)):
 		if i == len(porcentajes) - 1:
@@ -66,25 +71,23 @@ def generar_matriz_transicion(intervalos, porcentajes):
 		row[row > 0] /= a
 	return transicion
 
-def simular_anual(k_a, transicion, valores_a, intervalos):
-	p = np.zeros(k_a)
-	estado_inicial = 3
+def simular_anual(k, transicion, valores, intervalos):
+	"Simula el valor de una acción a lo largo de un año"
+	p = np.zeros(k)
+	estado_inicial = 3 
 	p[estado_inicial] = 1
-	#print("El estado inicial para la simulación del valor del a acción A es:")
-	#print(p)
 	estados_simulados = [estado_inicial]
 	for i in range(0, 365):
 		p = np.dot(p, transicion) #multiplico p por la matriz de transiciones
 		acc_p = np.cumsum(p) #calculo el vector de prob acumulada
 		u = random.uniform(0,1) #obtengo un numero random de manera uniforme
-		estado_actual = next((i for i,v in enumerate(acc_p) if v > u)) #calculo el estado actual en base al numero random generado
-		estados_simulados.append(estado_actual) #guardo el estado simulado
+		estado_actual = next((i for i,v in enumerate(acc_p) if v > u))  #calculo el estado actual en base al numero random generado
+		estados_simulados.append(estado_actual)
 		#pongo el vector p en el actual estado
-		p = np.zeros(math.ceil(k_a)) 
+		p = np.zeros(math.ceil(k)) 
 		p[estado_actual] = 1
-	
 	#Con los estados simulados, genero un valor inicial y le aplico los porcentajes correspondientes
-	valor = random.uniform(min(valores_a), max(valores_a))
+	valor = random.uniform(min(valores), max(valores))
 	valores_simulados = [valor]
 	for estado in estados_simulados:
 		porcentaje_aplicado = get_centro_intervalo_for_estado(estado, intervalos) / 100
@@ -92,36 +95,42 @@ def simular_anual(k_a, transicion, valores_a, intervalos):
 		valores_simulados.append(round(valor, 2))
 	return valores_simulados
 
-def main():   
-	valores_a = obtener_valores_desde_archivo("accion A.csv")
-	porcentajes = obtener_porcentajes(valores_a)
-	k_a = math.ceil(1 + math.log2(len(valores_a))) #cantidad de intervalos que voy a tener segun Sturges (estos seran nuestros estados)
-	intervalos = armar_intervalos(porcentajes, k_a)
-	print("Los posibles estados de A son:")
+def simular_accion(accion, filename):
+	"Realizar todas las instrucciones para simular el valor de la acción recibida por parametro"
+	valores = obtener_valores_desde_archivo(filename)
+	porcentajes = obtener_porcentajes(valores)
+	k = math.ceil(1 + math.log2(len(valores))) #cantidad de intervalos que voy a tener segun Sturges (estos seran nuestros estados)
+	intervalos = armar_intervalos(porcentajes, k)
+	print("Los posibles estados de la acción " + accion + " son:")
 	print(intervalos)
-	pruebas_get_estado_a(intervalos)
 	transicion = generar_matriz_transicion(intervalos, porcentajes)
-	print("La matriz de transición para los porcentajes de la acción A es:")
+	print("La matriz de transición para los porcentajes de la acción " + accion + " es:")
 	print(transicion)
 	transicion_elevada = transicion
 	for i in range(0, 50):
 		transicion_elevada = np.dot(transicion_elevada, transicion)
-	print("La cantidad de tiempo que la acción A pasa en cada estado es:")
+	print("La cantidad de tiempo que la acción " + accion + " pasa en cada estado es:")
 	print(transicion_elevada[0])
 	
-#Descomentar para probar 100 corridas. Guarda los maximos a un archivo de texto	
-	#maxs = []
-	#for i in range(0,100):
-	#	valores = simular_anual(k_a, transicion, valores_a, intervalos)
-	#	maxs.append(round(max(valores),2))
-	#maxs.sort()
-	#with open('test.txt', 'w') as f:
-	#	for item in maxs:
-	#		f.write("%s," % item)
-	#print(maxs)
-	valores = simular_anual(k_a, transicion, valores_a, intervalos)
-	plt.scatter(range(0,367), valores)  
+	#Descomentar para probar 100 corridas. guarda los maximos a un archivo de texto	
+	maxs = []
+	for i in range(0,100):
+		valores_simulados = simular_anual(k, transicion, valores, intervalos)
+		maxs.append(round(max(valores_simulados),2))
+	maxs.sort()
+	with open('test.txt', 'w') as f:
+		for item in maxs:
+			f.write("%s, " % item)
+	valores_simulados = simular_anual(k, transicion, valores, intervalos)
+	plt.scatter(range(0,367), valores_simulados)
+	plt.title("Valor de la acción " + accion)
+	plt.xlabel("Días")
+	plt.ylabel("Valor")
 	plt.show()
+
+def main():   
+	simular_accion("A", "accion A.csv")
+	simular_accion("B", "accion B.csv")
 
 if __name__ == "__main__":
     main()
