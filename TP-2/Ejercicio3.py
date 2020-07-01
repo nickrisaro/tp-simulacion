@@ -128,25 +128,84 @@ def simular_accion(accion, filename):
 	plt.ylabel("Valor")
 	plt.show()
 
-def main():   
-	simular_accion("A", "accion A.csv")
-	simular_accion("B", "accion B.csv")
+
+def simular_anual_con_mas_estados(estados, transicion, valores):
+	k = len(estados)
+	p = np.zeros(k)
+	estado_inicial = 3 
+	p[estado_inicial] = 1
+	estados_simulados = [estado_inicial]
+	for i in range(0, 365):
+		p = np.dot(p, transicion) #multiplico p por la matriz de transiciones
+		acc_p = np.cumsum(p) #calculo el vector de prob acumulada
+		u = random.uniform(0,1) #obtengo un numero random de manera uniforme
+		estado_actual = next((i for i,v in enumerate(acc_p) if v > u))  #calculo el estado actual en base al numero random generado
+		estados_simulados.append(estado_actual)
+		#pongo el vector p en el actual estado
+		p = np.zeros(math.ceil(k)) 
+		p[estado_actual] = 1
+	#Con los estados simulados, genero un valor inicial y le aplico los porcentajes correspondientes
+	valor = random.uniform(min(valores), max(valores))
+	valores_simulados = [valor]
+	for estado in estados_simulados:
+		porcentaje_aplicado = estados[estado] / 100
+		valor = valor * porcentaje_aplicado
+		valores_simulados.append(round(valor, 2))
+	return valores_simulados
+
+def simular_accion_con_mas_estados(accion, filename):
+	"Simula la evolucion de las acciones tomando como estados los porcentajes con incrementos de 1%"
+	valores = obtener_valores_desde_archivo(filename)
+	porcentajes = obtener_porcentajes(valores)
+	estados = np.unique(porcentajes)
+	estados.sort()
+	print("Los posibles estados de la acción " + accion + " son:")
+	print(estados)
+	transicion = np.zeros((len(estados), len(estados)))
+	for i in range(0, len(porcentajes)):
+		if i == len(porcentajes) - 1:
+			break
+		estado_1, = np.where(estados == porcentajes[i])
+		estado_2, = np.where(estados == porcentajes[i + 1])
+		transicion[estado_1[0]][estado_2[0]] += 1 
+	for row in transicion:
+		a = np.sum(row)
+		row[row > 0] /= a
+
+	print("La matriz de transición de estados de la acción " + accion + " es:")
+	print(transicion)
+	transicion_elevada = transicion
+	for i in range(0, 50):
+		transicion_elevada = np.dot(transicion_elevada, transicion)
+	print("La cantidad de tiempo que la acción " + accion + " pasa en cada estado es:")
+	print(transicion_elevada[0])
+
+	#Descomentar para 100 corridas
+	#maxs = []
+	#for i in range(0,100):
+	#	valores_simulados = simular_anual_con_mas_estados(estados, transicion, valores)
+	#	maxs.append(round(max(valores_simulados),2))
+	#maxs.sort()
+	#with open('test.txt', 'w') as f:
+	#	for item in maxs:
+	#		f.write("%s, " % item)
+
+	valores_simulados = simular_anual_con_mas_estados(estados, transicion, valores)
+	plt.scatter(range(0,367), valores_simulados)
+	plt.title("Valor de la acción " + accion)
+	plt.xlabel("Días")
+	plt.ylabel("Valor")
+	plt.show()
+
+
+
+def main():
+
+	#simular_accion("A", "accion A.csv")
+	#simular_accion("B", "accion B.csv")
+	simular_accion_con_mas_estados("A","accion A.csv")
+	simular_accion_con_mas_estados("B","accion B.csv")
+
 
 if __name__ == "__main__":
     main()
-
-
-
-#0 -> 1er intervalo (entre 
-
-
-#estados_b, estados_unicos_b = calcular_valores("accion B.csv")
-
-
-#estados_a, estados_unicos_a = calcular_estados("accion A.csv")
-#k = 1 + math.log(len(estados_a),2)
-#hist = np.histogram(estados_a) 
-#print(hist)
-#plt.hist(porcentajes, bins=11)  # arguments are passed to np.histogram
-#plt.show()
-#estados_b, estados_unicos_b = calcular_estados("accion B.csv")
